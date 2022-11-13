@@ -11,7 +11,7 @@ Most online services nowadays have too many options which are tedious to browse 
 ## Features
 - Straightforward Graphical User Interface.
 - Quick YouTube to audio conversion.
-- Trim/cut the audio file; download its subclip from `start` to `end`.
+- Trim/cut the audio file; download a subclip from `start` to `end`.
 - Change output file-name/directory.
 
 ## Demo
