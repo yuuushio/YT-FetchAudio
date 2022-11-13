@@ -1,7 +1,7 @@
 <h1 align="center"> YouTube Video to Audio </h1>
 
 <p align="center">
-A GUI application that serves to do just one thing - download and convert a YouTube video, to audio (primarily for music); with the ability to trim the file just before downloading - given start/end time - so you don't have to listen to annoying intro's/outro's.
+A GUI application that serves to do just one thing - download and convert a YouTube video, to audio (primarily for music); with the ability to trim the file - given start/end time - so you don't have to listen to annoying intro's/outro's.
 </p>
 
 <h1></h1
