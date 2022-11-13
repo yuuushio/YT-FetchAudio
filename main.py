@@ -18,6 +18,7 @@ class Downloader:
 
         return int(kbps_digits)
 
+    # Convert the abr string to int to sort the streams by kbps later
     def _get_audio_streams(self):
         self._streams = self._yt.streams.filter(only_audio=True).filter(
             file_extension="mp4"
@@ -44,6 +45,7 @@ class Downloader:
         itag_var = self._get_audio_streams()["itag"]
         print("Downloading to...")
         if self._streams is not None:
+            # Moviepy download info/progress will be printed in the terminal
             print(self._streams.get_by_itag(itag_var).download(filename=f"{file_name}"))
 
     def slice(self, start=0, end=None, output_file_name="output_audio_file"):
@@ -64,7 +66,7 @@ class Downloader:
         self.download_temp()
         self.slice(start, end, output_file_name)
 
-
+# Class to handle the callbacks
 class Callback:
     def __init__(self):
         self._start = 0
@@ -109,6 +111,7 @@ class App:
         self._info_string = ""
         self._cb = Callback()
 
+    # Get video info
     def link_info(self, yt_link):
         self._info_string += f"{yt_link.title}\n"
         self._info_string += (
@@ -119,10 +122,15 @@ class App:
         )
 
     def get_url(self, sender, app_data, user_data):
+        # Validating url using pytube's exception
         try:
             yt_link = YouTube(str(app_data))
+
+            # generate info of the link
             self.link_info(yt_link)
             self._cb.dl_object = Downloader(yt_link)
+
+            # user_data used to output video's info upon entering url
             dpg.set_value(user_data, self._info_string)
 
         except PytubeError:
@@ -139,6 +147,8 @@ class App:
 
             with dpg.group(horizontal=True):
                 with dpg.child_window(width=600, tag="yt_url", border=False):
+
+                    # Text input group to enter the video url
                     dpg.add_text("URL:")
                     with dpg.group():
                         text_control = dpg.add_text(tag="output_txt", default_value="")
@@ -153,6 +163,7 @@ class App:
                             )
                             dpg.add_spacer()
 
+                    # Start/end time group
                     with dpg.group(horizontal=True):
                         dpg.add_text("Start:")
                         dpg.add_input_text(
@@ -167,6 +178,7 @@ class App:
                     with dpg.group():
                         dpg.add_spacer()
 
+                    # Get file name of the output
                     with dpg.group(horizontal=True):
                         dpg.add_text("Output File Name:")
                         dpg.add_input_text(
@@ -179,6 +191,7 @@ class App:
                     with dpg.group():
                         dpg.add_spacer()
 
+                    # Download button group
                     with dpg.group(horizontal=True):
                         dpg.add_button(
                             tag="dl_btn", label="Download", callback=self._cb.dl_btn_cb
