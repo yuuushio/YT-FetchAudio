@@ -51,28 +51,28 @@ class Downloader:
     def slice(self, file_type, start=0, end=None, output_file_name="output_audio_file"):
         print(start, print(type(start)))
 
-        #        try:
-            # Format:
-            # - `(sec)`
-            # - `(min, sec)`
-            # - `(hr, min, sec)`
-            # - String: "hr:min:sec"
-        audio_clip = AudioFileClip(f"{self._file_name}").subclip(
-            t_start=start, t_end=end
-        )
         try:
-            if file_type == "aac":
-                audio_clip.write_audiofile(
-                    filename=f"{output_file_name}.aac", codec="aac"
-                )
-            else:
-                audio_clip.write_audiofile(
-                    filename=f"{output_file_name}.{file_type}" 
-                )
+            # Format:
+            # - `<sec>`
+            # - `<min, sec>`
+            # - `<hr, min, sec>`
+            # - String: "hr:min:sec"
+            audio_clip = AudioFileClip(f"{self._file_name}").subclip(
+                t_start=start, t_end=end
+            )
+            try:
+                if file_type == "aac":
+                    audio_clip.write_audiofile(
+                        filename=f"{output_file_name}.aac", codec="aac"
+                    )
+                else:
+                    audio_clip.write_audiofile(
+                        filename=f"{output_file_name}.{file_type}" 
+                    )
+            except:
+                    print("Error downloading; invalid output file name.")
         except:
-                print("Error downloading; invalid output file name.")
-        #except:
-        print("Invalid start/end time.")
+            print("Invalid start/end time.")
 
     def download(self, start, end, output_file_name, file_type):
         self.download_temp()
