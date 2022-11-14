@@ -48,23 +48,28 @@ class Downloader:
             # Moviepy download info/progress will be printed in the terminal
             print(self._streams.get_by_itag(itag_var).download(filename=f"{file_name}"))
 
-    def slice(self, start=0, end=None, output_file_name="output_audio_file"):
+    def slice(self, file_type, start=0, end=None, output_file_name="output_audio_file"):
         try:
             audio_clip = AudioFileClip(f"{self._file_name}").subclip(
                 t_start=start, t_end=end
             )
             try:
-                audio_clip.write_audiofile(
-                    filename=f"{output_file_name}.aac", codec="aac"
-                )
+                if file_type == "aac":
+                    audio_clip.write_audiofile(
+                        filename=f"{output_file_name}.aac", codec="aac"
+                    )
+                else:
+                    audio_clip.write_audiofile(
+                        filename=f"{output_file_name}.{file_type}" 
+                    )
             except:
                 print("Error downloading; invalid output file name.")
         except:
             print("Invalid start/end time.")
 
-    def download(self, start, end, output_file_name):
+    def download(self, start, end, output_file_name, file_type):
         self.download_temp()
-        self.slice(start, end, output_file_name)
+        self.slice(start, end, output_file_name, file_type)
 
 # Class to handle the callbacks
 class Callback:
@@ -73,6 +78,7 @@ class Callback:
         self._end = None
         self._output_file_name = "output_audio_file"
         self._dl_object = None
+        self._file_type = "aac"
 
     def test_callback(self):
         pass
@@ -100,10 +106,13 @@ class Callback:
     def file_name_cb(self, sender, app_data, user_data):
         self._output_file_name = app_data
 
+    def file_type_cb(self, sender, app_data, user_data):
+        self._file_type = app_data
+
     def dl_btn_cb(self, sender, app_data, user_data):
         print(f"{self._start} {self._end} {self._output_file_name}")
         if self.dl_object is not None:
-            self.dl_object.download(self._start, self._end, self._output_file_name)
+            self.dl_object.download(self._start, self._end, self._output_file_name, self._file_type)
 
 
 class App:
@@ -186,7 +195,7 @@ class App:
                             width=200,
                             callback=self._cb.file_name_cb,
                         )
-                        dpg.add_text(".mp3")
+                        dpg.add_combo(("aac", "mp3"), default_value="aac", callback=self._cb.file_type_cb, tag="audio_type", width=90)
 
                     with dpg.group():
                         dpg.add_spacer()
