@@ -48,7 +48,7 @@ Start/End input value needs to be comma separated in the form of `<hr>, <sec>, <
 15
 ```
 
-These will be evaluated to a tuple for `moviepy` to evaluate.
+These will be evaluated to a tuple for `moviepy`.
 
 If nothing is entered, the program will simply convert the whole downloaded YouTube video, to audio.
 
