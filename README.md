@@ -36,4 +36,19 @@ python main.py
 - `aac`
 
 ### Start/End Time Format
-Start/End input needed to be entered in a certain format when wanting to trim the file. If nothing is entered, the program will simply convert the whole downloaded YouTube video, to audio.
+Start/End input value needs to be comma separated in the form of `<hr>, <sec>, <min>`. Examples of input:
+
+```bash
+# Subclip starting from 1 minute and 2 seconds
+1,2
+```
+
+```bash
+# Subclip starting from 15 seconds
+15
+```
+
+These will be evaluated to a tuple for `moviepy` to evaluate.
+
+If nothing is entered, the program will simply convert the whole downloaded YouTube video, to audio.
+

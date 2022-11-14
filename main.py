@@ -49,42 +49,46 @@ class Downloader:
             print(self._streams.get_by_itag(itag_var).download(filename=f"{file_name}"))
 
     def slice(self, file_type, start=0, end=None, output_file_name="output_audio_file"):
+        print(start, print(type(start)))
+
+        #        try:
+            # Format:
+            # - `(sec)`
+            # - `(min, sec)`
+            # - `(hr, min, sec)`
+            # - String: "hr:min:sec"
+        audio_clip = AudioFileClip(f"{self._file_name}").subclip(
+            t_start=start, t_end=end
+        )
         try:
-            audio_clip = AudioFileClip(f"{self._file_name}").subclip(
-                t_start=start, t_end=end
-            )
-            try:
-                if file_type == "aac":
-                    audio_clip.write_audiofile(
-                        filename=f"{output_file_name}.aac", codec="aac"
-                    )
-                else:
-                    audio_clip.write_audiofile(
-                        filename=f"{output_file_name}.{file_type}" 
-                    )
-            except:
-                print("Error downloading; invalid output file name.")
+            if file_type == "aac":
+                audio_clip.write_audiofile(
+                    filename=f"{output_file_name}.aac", codec="aac"
+                )
+            else:
+                audio_clip.write_audiofile(
+                    filename=f"{output_file_name}.{file_type}" 
+                )
         except:
-            print("Invalid start/end time.")
+                print("Error downloading; invalid output file name.")
+        #except:
+        print("Invalid start/end time.")
 
     def download(self, start, end, output_file_name, file_type):
         self.download_temp()
-        self.slice(start, end, output_file_name, file_type)
+        self.slice(file_type, start, end, output_file_name)
 
-# Class to handle the callbacks
 class Callback:
+    """
+    Class used to handle dpg callbacks.
+    """
+
     def __init__(self):
         self._start = 0
         self._end = None
         self._output_file_name = "output_audio_file"
         self._dl_object = None
         self._file_type = "aac"
-
-    def test_callback(self):
-        pass
-
-    def valid_trim(self):
-        pass
 
     def valid_file_name(self):
         pass
@@ -98,10 +102,10 @@ class Callback:
         self._dl_object = v
 
     def start_cb(self, sender, app_data, user_data):
-        self._start = 0 if app_data == "" else app_data
+        self._start = 0 if app_data == "" else eval(app_data)
 
     def end_cb(self, sender, app_data, user_data):
-        self._end = None if app_data == "" else app_data
+        self._end = None if app_data == "" else eval(app_data)
 
     def file_name_cb(self, sender, app_data, user_data):
         self._output_file_name = app_data
