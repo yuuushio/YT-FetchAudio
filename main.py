@@ -5,11 +5,16 @@ from moviepy.editor import *
 
 
 class Downloader:
+    """
+    Class used to handle downloading, converting and trimming the YouTube video.
+    """
     def __init__(self, yt_object):
         self._yt = yt_object
         self._streams_dict = {}
         self._streams = None
+        self._file_directory = ""
 
+    # Convert the abr string to int to sort the streams by kbps later
     def _kbps_string_to_int(self, kbps):
         kbps_digits = ""
         for c in kbps:
@@ -18,12 +23,12 @@ class Downloader:
 
         return int(kbps_digits)
 
-    # Convert the abr string to int to sort the streams by kbps later
     def _get_audio_streams(self):
         self._streams = self._yt.streams.filter(only_audio=True).filter(
             file_extension="mp4"
         )
 
+        # Dict containing the necessary info for each stream
         for i in range(len(self._streams)):
             self._streams_dict[i + 1] = {
                 "itag": self._streams[i].itag,
@@ -39,44 +44,71 @@ class Downloader:
         # `[0]` is the index to the key with the highest kbps
         return self._streams_dict[highest_kbps_stream[0]]
 
-    def download_temp(self, file_name="tmp_dl.mp4"):
+    def set_path(self, v: str):
+        if v[-1] != "/":
+            self._file_directory = v
+        else:
+            # Because we're going to put a `/` from our side
+            self._file_directory = v[:-1]
+
+    def download_temp(self, user_data, file_name="tmp_dl.mp4"):
         # Variable local to the entire class so that we can use it in `slice()` function.
         self._file_name = file_name
         itag_var = self._get_audio_streams()["itag"]
-        print("Downloading to...")
+        dpg.set_value(user_data, "Downloading...")
         if self._streams is not None:
             # Moviepy download info/progress will be printed in the terminal
-            print(self._streams.get_by_itag(itag_var).download(filename=f"{file_name}"))
+            #print(self._streams.get_by_itag(itag_var).download(filename=f"{file_name}"))
+            self._streams.get_by_itag(itag_var).download(filename=f"{file_name}")
 
-    def slice(self, file_type, start=0, end=None, output_file_name="output_audio_file"):
-        print(start, print(type(start)))
+    def slice(self, user_data, file_type, start=0, end=None, output_file_name="output_audio_file"):
 
         try:
             # Format:
             # - `<sec>`
             # - `<min, sec>`
             # - `<hr, min, sec>`
-            # - String: "hr:min:sec"
             audio_clip = AudioFileClip(f"{self._file_name}").subclip(
                 t_start=start, t_end=end
             )
             try:
                 if file_type == "aac":
-                    audio_clip.write_audiofile(
-                        filename=f"{output_file_name}.aac", codec="aac"
-                    )
+                    if self._file_directory is not None and self._file_directory != "":
+                        # `write_audiofile` returns None when it's done converting/subcliping;
+                        #   which can be used to provide feedback.
+                        fb_str = audio_clip.write_audiofile(
+                            filename=f"{self._file_directory}/{output_file_name}.aac", codec="aac"
+                        )
+                        if fb_str is None: dpg.set_value(user_data, "Download complete!")
+                    else:
+                        # Else download in the directory this program resides
+                        fb_str = audio_clip.write_audiofile(
+                            filename=f"{output_file_name}.aac", codec="aac"
+                        )
+                        if fb_str is None: dpg.set_value(user_data, "Download complete!")
                 else:
-                    audio_clip.write_audiofile(
-                        filename=f"{output_file_name}.{file_type}" 
-                    )
-            except:
-                    print("Error downloading; invalid output file name.")
-        except:
-            print("Invalid start/end time.")
+                    if self._file_directory is not None and self._file_directory != "":
+                        fb_str = audio_clip.write_audiofile(
+                            filename=f"{self._file_directory}/{output_file_name}.{file_type}"
+                        )
+                        if fb_str is None: dpg.set_value(user_data, "Download complete!")
+                    else:
+                        fb_str = audio_clip.write_audiofile(
+                            filename=f"{output_file_name}.{file_type}" 
+                        )
+                        if fb_str is None: dpg.set_value(user_data, "Download complete!")
 
-    def download(self, start, end, output_file_name, file_type):
-        self.download_temp()
-        self.slice(file_type, start, end, output_file_name)
+            except:
+                    dpg.set_value(user_data, "Error downloading; invalid output file name.")
+        except:
+            dpg.set_value(user_data, "Invalid start/end time.")
+
+    def download(self,user_data,start, end, output_file_name, file_type):
+        # Download raw youtube vid (audio stream) in mp4 format
+        self.download_temp(user_data)
+
+        # Convert downloaded youtube vid to audio file; subclip if parameters are specified
+        self.slice(user_data, file_type, start, end, output_file_name)
 
 class Callback:
     """
@@ -114,12 +146,26 @@ class Callback:
         self._file_type = app_data
 
     def dl_btn_cb(self, sender, app_data, user_data):
-        print(f"{self._start} {self._end} {self._output_file_name}")
+        # print(f"{self._start} {self._end} {self._output_file_name}")
         if self.dl_object is not None:
-            self.dl_object.download(self._start, self._end, self._output_file_name, self._file_type)
+            self.dl_object.download(user_data, self._start, self._end, self._output_file_name, self._file_type)
 
+class Config:
+    """
+    Class to read config file.
+    """
+
+    # This will make it so that the user doesn't have to input the
+    # output directory each time the app is run; the app will fetch 
+    # it from the config file instead.
+
+    def __init__(self):
+        raise NotImplementedError
 
 class App:
+    """
+    Class used to handle the main GUI.
+    """
     def __init__(self):
         self._info_string = ""
         self._cb = Callback()
@@ -205,12 +251,13 @@ class App:
                         dpg.add_spacer()
 
                     # Download button group
-                    with dpg.group(horizontal=True):
+                    with dpg.group():
+                        feedback_text = dpg.add_text(tag="feedback", default_value="")
                         dpg.add_button(
-                            tag="dl_btn", label="Download", callback=self._cb.dl_btn_cb
+                            tag="dl_btn", label="Download", callback=self._cb.dl_btn_cb,
+                            user_data = feedback_text
                         )
                         dpg.add_spacer()
-                        dpg.add_text("feedback...")
 
     def start_gui(self):
         dpg.create_context()
