@@ -57,7 +57,6 @@ class Downloader:
         itag_var = self._get_audio_streams()["itag"]
         dpg.set_value(user_data, "Downloading...")
         if self._streams is not None:
-            # Moviepy download info/progress will be printed in the terminal
             #print(self._streams.get_by_itag(itag_var).download(filename=f"{file_name}"))
             self._streams.get_by_itag(itag_var).download(filename=f"{file_name}")
 
@@ -75,7 +74,7 @@ class Downloader:
                 if file_type == "aac":
                     if self._file_directory is not None and self._file_directory != "":
                         # `write_audiofile` returns None when it's done converting/subcliping;
-                        #   which can be used to provide feedback.
+                        #   this can be used to provide feedback.
                         fb_str = audio_clip.write_audiofile(
                             filename=f"{self._file_directory}/{output_file_name}.aac", codec="aac"
                         )
