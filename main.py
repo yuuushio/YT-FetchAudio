@@ -106,7 +106,7 @@ class Downloader:
         # Download raw youtube vid (audio stream) in mp4 format
         self.download_temp(user_data)
 
-        # Convert downloaded youtube vid to audio file; subclip if parameters are specified
+        # Convert downloaded youtube vid to mp3,aac...; subclip if parameters are specified
         self.slice(user_data, file_type, start, end, output_file_name)
 
 class Callback:
@@ -168,6 +168,7 @@ class App:
     def __init__(self):
         self._info_string = ""
         self._cb = Callback()
+        self._current_url = ""
 
     # Get video info
     def link_info(self, yt_link):
@@ -179,7 +180,14 @@ class App:
             f"Uploaded: {yt_link.publish_date.date()} by {yt_link.author}\n"
         )
 
+    def _reset_info_string(self):
+        self._info_string = ""
+
     def get_url(self, sender, app_data, user_data):
+        # Clear the current link information (if any) when a new link is entered
+        self._reset_info_string()
+        dpg.set_value(user_data, self._info_string)
+
         # Validating url using pytube's exception
         try:
             yt_link = YouTube(str(app_data))
@@ -204,7 +212,7 @@ class App:
         ):
 
             with dpg.group(horizontal=True):
-                with dpg.child_window(width=600, tag="yt_url", border=False):
+                with dpg.child_window(width=450, tag="yt_url", border=False):
 
                     # Text input group to enter the video url
                     dpg.add_text("URL:")
