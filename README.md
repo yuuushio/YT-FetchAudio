@@ -52,3 +52,19 @@ These will be evaluated to a tuple for `moviepy`.
 
 If nothing is entered, the program will simply convert the whole downloaded YouTube video, to audio.
 
+### Config File
+The output directory for the download is read from `config.yml` file. Simply change the string value for the `directory` key in file to change where you want the downloaded file to go. Example:
+
+```yaml
+# config.yml
+directory: "/path/to/directory/"
+```
+
+```yaml
+# sending the downloaded file to downloads folder
+directory: "~/Downloads"
+```
+
+Invalid directory path will be evaluated to `""` which is the directory the program itself resides in.
+
+Warning: Refrain from specifying the file-name in the string because this string is evaluated as a directory.
