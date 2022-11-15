@@ -2,7 +2,40 @@ import dearpygui.dearpygui as dpg
 from pytube import YouTube
 from pytube.exceptions import *
 from moviepy.editor import *
+import yaml
+import os
 
+
+class Config:
+    """
+    Class to read config file.
+    """
+
+    # This will make it so that the user doesn't have to input the
+    # output directory each time the app is run; the app will fetch 
+    # it from the config file instead.
+
+    def __init__(self):
+        self._data = ""
+        self._read_config_file()
+
+    @property
+    def directory(self):
+        return self._data
+
+    @directory.setter
+    def directory(self, v):
+        self._data = v
+
+    def _read_config_file(self):
+        with open("config.yml", "r") as f:
+            yml_data = yaml.safe_load(f)
+
+        # `expanduser` used to expand paths containing tilde
+        if os.path.exists(os.path.expanduser(yml_data["directory"])):
+            self.directory = os.path.expanduser(yml_data["directory"])
+        else:
+            self.directory = ""
 
 class Downloader:
     """
@@ -44,12 +77,15 @@ class Downloader:
         # `[0]` is the index to the key with the highest kbps
         return self._streams_dict[highest_kbps_stream[0]]
 
-    def set_path(self, v: str):
-        if v[-1] != "/":
-            self._file_directory = v
+    def set_path(self, v: str)->str:
+        if v == "" or v is None:
+            return ""
         else:
-            # Because we're going to put a `/` from our side
-            self._file_directory = v[:-1]
+            if v[-1] != "/":
+                return v
+            else:
+                # Because we're going to put a `/` from our side
+                return v[:-1]
 
     def download_temp(self, user_data, file_name="tmp_dl.mp4"):
         # Variable local to the entire class so that we can use it in `slice()` function.
@@ -71,6 +107,9 @@ class Downloader:
                 t_start=start, t_end=end
             )
             try:
+                cfg = Config()
+                self._file_directory = self.set_path(cfg.directory)
+
                 if file_type == "aac":
                     if self._file_directory is not None and self._file_directory != "":
                         # `write_audiofile` returns None when it's done converting/subcliping;
@@ -97,6 +136,8 @@ class Downloader:
                         )
                         if fb_str is None: dpg.set_value(user_data, "Download complete!")
 
+                # remove the youtube mp4 video we downloaded
+                os.system(f"rm {self._file_name}")
             except:
                     dpg.set_value(user_data, "Error downloading; invalid output file name.")
         except:
@@ -149,17 +190,7 @@ class Callback:
         if self.dl_object is not None:
             self.dl_object.download(user_data, self._start, self._end, self._output_file_name, self._file_type)
 
-class Config:
-    """
-    Class to read config file.
-    """
 
-    # This will make it so that the user doesn't have to input the
-    # output directory each time the app is run; the app will fetch 
-    # it from the config file instead.
-
-    def __init__(self):
-        raise NotImplementedError
 
 class App:
     """
