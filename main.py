@@ -4,6 +4,7 @@ from pytube.exceptions import *
 from moviepy.editor import *
 import yaml
 import os
+import subprocess
 
 
 class Config:
@@ -137,7 +138,7 @@ class Downloader:
                         if fb_str is None: dpg.set_value(user_data, "Download complete!")
 
                 # remove the youtube mp4 video we downloaded
-                os.system(f"rm {self._file_name}")
+                subprocess.call(["rm", f"{self._file_name}"])
             except:
                     dpg.set_value(user_data, "Error downloading; invalid output file name.")
         except:
