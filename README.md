@@ -67,4 +67,4 @@ directory: "~/Downloads"
 
 Invalid directory path will be evaluated to `""` which is the directory the program itself resides in.
 
-Warning: Refrain from specifying the file-name in the string because this string is evaluated as a directory.
+*Warning: Refrain from specifying the file-name in the string because this string is evaluated as a directory.*

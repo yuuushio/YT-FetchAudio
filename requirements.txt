@@ -1,0 +1,4 @@
+dearpygui==1.8.0
+moviepy==1.0.3
+pytube==12.1.0
+PyYAML==6.0

@@ -294,7 +294,7 @@ class App:
                         feedback_text = dpg.add_text(tag="feedback", default_value="")
                         dpg.add_button(
                             tag="dl_btn", label="Download", callback=self._cb.dl_btn_cb,
-                            user_data = feedback_text
+                            user_data = feedback_text, width=100, height=30
                         )
                         dpg.add_spacer()
 
