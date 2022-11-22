@@ -191,7 +191,42 @@ class Callback:
         if self.dl_object is not None:
             self.dl_object.download(user_data, self._start, self._end, self._output_file_name, self._file_type)
 
+class Colors:
+    def __init__(self):
+        pass
 
+        
+class nord(Colors):
+    def __init__(self):
+        super().__init__()
+
+    @property
+    def polar_night(self):
+        a = (46,52,64)
+        b = (59,66,82)
+        c = (67,76,94)
+        return [a, b, c]
+
+    @property
+    def snow(self):
+        a = (216,222,233)
+        b = (229,233,240)
+        c = (236,239,244)
+        return [a,b,c]
+
+    @property
+    def frost(self):
+        a = (143,188,187)
+        b = (136,192,208)
+        c = (129,161,193)
+        d = (94, 129, 172)
+        return [a,b,c,d]
+
+    @property
+    def aurora(self):
+        b = (208,135,112)
+        d = (163,190,140)
+        return [b, d]
 
 class App:
     """
@@ -235,41 +270,90 @@ class App:
             print("Enter a valid YouTube link.")
 
     def main_dpg_ops(self):
+
+        # FONT REGISTRY
+        with dpg.font_registry():
+            default_font = dpg.add_font("assets/vm_nf_mono_a.ttf", 19*2)
+            sub_text = dpg.add_font("assets/vm_nf_mono_a.ttf", 17*2)
+            dpg.set_global_font_scale(0.5)
+
+
+        nord_scheme = nord()
+        with dpg.theme() as global_theme:
+        
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_FrameBg, nord_scheme.polar_night[1], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_WindowBg, nord_scheme.polar_night[0], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_ChildBg, nord_scheme.polar_night[0], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_FrameBgActive, nord_scheme.snow[0], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 20, 20, category=dpg.mvThemeCat_Core)
+        
+        with dpg.theme() as button_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, nord_scheme.snow[0], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, nord_scheme.frost[0], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, nord_scheme.frost[0], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.polar_night[0], category=dpg.mvThemeCat_Core)
+
+        with dpg.theme() as text_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.snow[2], category=dpg.mvThemeCat_Core)
+
+        with dpg.theme() as ip_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.frost[0], category=dpg.mvThemeCat_Core)
+
+        with dpg.theme() as info_label_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.aurora[0], category=dpg.mvThemeCat_Core)
+
+
+        with dpg.theme() as fb_theme_downloading:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.aurora[1], category=dpg.mvThemeCat_Core)
+
+        with dpg.theme() as fb_theme_finished:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.aurora[1], category=dpg.mvThemeCat_Core)
+
         with dpg.window(
             pos=[0, 0],
             autosize=True,
             no_resize=True,
             no_title_bar=True,
             tag="Primary Window",
-        ):
+        ) as win1:
+            dpg.bind_font(default_font)
 
             with dpg.group(horizontal=True):
-                with dpg.child_window(width=450, tag="yt_url", border=False):
+                with dpg.child_window(width=500, tag="yt_url", border=False) as cw:
 
                     # Text input group to enter the video url
-                    dpg.add_text("URL:")
+                    url_text = dpg.add_text("URL:")
                     with dpg.group():
-                        text_control = dpg.add_text(tag="output_txt", default_value="")
+                        text_control = dpg.add_text(tag="output_txt", default_value="", indent=4)
                         dpg.add_spacer()
                         with dpg.group():
-                            dpg.add_input_text(
+                            ip_a = dpg.add_input_text(
                                 before=text_control,
                                 tag="input_yt_url",
                                 callback=self.get_url,
-                                width=550,
+                                width=450,
                                 user_data=text_control,
+                                multiline=False
                             )
                             dpg.add_spacer()
 
                     # Start/end time group
                     with dpg.group(horizontal=True):
-                        dpg.add_text("Start:")
-                        dpg.add_input_text(
+                        start_text = dpg.add_text("Start:")
+                        ip_b = dpg.add_input_text(
                             tag="start_time", width=100, callback=self._cb.start_cb
                         )
                         dpg.add_spacer()
-                        dpg.add_text("End:")
-                        dpg.add_input_text(
+                        end_text = dpg.add_text("End:")
+                        ip_c = dpg.add_input_text(
                             tag="end_time", width=100, callback=self._cb.end_cb
                         )
 
@@ -278,8 +362,8 @@ class App:
 
                     # Get file name of the output
                     with dpg.group(horizontal=True):
-                        dpg.add_text("Output File Name:")
-                        dpg.add_input_text(
+                        op_file_text = dpg.add_text("Output File Name:")
+                        ip_d = dpg.add_input_text(
                             tag="output_file_name",
                             width=200,
                             callback=self._cb.file_name_cb,
@@ -292,11 +376,35 @@ class App:
                     # Download button group
                     with dpg.group():
                         feedback_text = dpg.add_text(tag="feedback", default_value="")
-                        dpg.add_button(
+                        dl_btn = dpg.add_button(
                             tag="dl_btn", label="Download", callback=self._cb.dl_btn_cb,
                             user_data = feedback_text, width=100, height=30
                         )
                         dpg.add_spacer()
+
+
+        dpg.bind_theme(global_theme)
+        dpg.bind_item_theme(win1, global_theme)
+        dpg.bind_item_theme(dl_btn, button_theme)
+        dpg.bind_item_theme(url_text, text_theme)
+        dpg.bind_item_theme(start_text, text_theme)
+        dpg.bind_item_theme(end_text, text_theme)
+        dpg.bind_item_theme(op_file_text, text_theme)
+        dpg.bind_item_font(ip_a, sub_text)
+        dpg.bind_item_font(ip_b, sub_text)
+        dpg.bind_item_font(ip_c, sub_text)
+        dpg.bind_item_font(ip_d, sub_text)
+
+        dpg.bind_item_font(text_control, sub_text)
+
+
+        dpg.bind_item_theme(ip_a,ip_theme) 
+        dpg.bind_item_theme(ip_b,ip_theme) 
+        dpg.bind_item_theme(ip_c,ip_theme) 
+        dpg.bind_item_theme(ip_d,ip_theme) 
+
+        dpg.bind_item_theme(text_control,info_label_theme) 
+        dpg.bind_item_theme(feedback_text,fb_theme_downloading) 
 
     def start_gui(self):
         dpg.create_context()
