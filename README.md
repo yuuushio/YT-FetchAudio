@@ -15,6 +15,7 @@ Most online services nowadays have too many options which are tedious to browse 
 - Change output file-name/directory.
 
 ## Demo
+<img src="assets/demo_a.gif" width=500></img>
 
 ## Usage
 
