@@ -6,13 +6,14 @@ import yaml
 import os
 import subprocess
 
+
 class Config:
     """
     Class to read config file.
     """
 
     # This will make it so that the user doesn't have to input the
-    # output directory each time the app is run; the app will fetch 
+    # output directory each time the app is run; the app will fetch
     # it from the config file instead.
 
     def __init__(self):
@@ -43,7 +44,7 @@ class Config:
         return self._colors
 
     @colors.setter
-    def colors(self, v:dict[str,str]):
+    def colors(self, v: dict[str, str]):
         self._colors = v
 
     def _read_config_file(self):
@@ -65,6 +66,7 @@ class Downloader:
     """
     Class used to handle downloading, converting and trimming the YouTube video.
     """
+
     def __init__(self, yt_object):
         self._yt = yt_object
         self._streams_dict = {}
@@ -101,7 +103,7 @@ class Downloader:
         # `[0]` is the index to the key with the highest kbps
         return self._streams_dict[highest_kbps_stream[0]]
 
-    def set_path(self, v: str)->str:
+    def set_path(self, v: str) -> str:
         if v == "" or v is None:
             return ""
         else:
@@ -117,10 +119,17 @@ class Downloader:
         itag_var = self._get_audio_streams()["itag"]
         dpg.set_value(user_data, "Downloading...")
         if self._streams is not None:
-            #print(self._streams.get_by_itag(itag_var).download(filename=f"{file_name}"))
+            # print(self._streams.get_by_itag(itag_var).download(filename=f"{file_name}"))
             self._streams.get_by_itag(itag_var).download(filename=f"{file_name}")
 
-    def slice(self, user_data, file_type, start=0, end=None, output_file_name="output_audio_file"):
+    def slice(
+        self,
+        user_data,
+        file_type,
+        start=0,
+        end=None,
+        output_file_name="output_audio_file",
+    ):
 
         try:
             # Format:
@@ -140,40 +149,46 @@ class Downloader:
                         # `write_audiofile` returns None when it's done converting/subcliping;
                         #   this can be used to provide feedback.
                         fb_str = audio_clip.write_audiofile(
-                            filename=f"{self._file_directory}/{output_file_name}.aac", codec="aac"
+                            filename=f"{self._file_directory}/{output_file_name}.aac",
+                            codec="aac",
                         )
-                        if fb_str is None: dpg.set_value(user_data, "Download complete!")
+                        if fb_str is None:
+                            dpg.set_value(user_data, "Download complete!")
                     else:
                         # Else download in the directory this program resides
                         fb_str = audio_clip.write_audiofile(
                             filename=f"{output_file_name}.aac", codec="aac"
                         )
-                        if fb_str is None: dpg.set_value(user_data, "Download complete!")
+                        if fb_str is None:
+                            dpg.set_value(user_data, "Download complete!")
                 else:
                     if self._file_directory is not None and self._file_directory != "":
                         fb_str = audio_clip.write_audiofile(
                             filename=f"{self._file_directory}/{output_file_name}.{file_type}"
                         )
-                        if fb_str is None: dpg.set_value(user_data, "Download complete!")
+                        if fb_str is None:
+                            dpg.set_value(user_data, "Download complete!")
                     else:
                         fb_str = audio_clip.write_audiofile(
-                            filename=f"{output_file_name}.{file_type}" 
+                            filename=f"{output_file_name}.{file_type}"
                         )
-                        if fb_str is None: dpg.set_value(user_data, "Download complete!")
+                        if fb_str is None:
+                            dpg.set_value(user_data, "Download complete!")
 
                 # remove the youtube mp4 video we downloaded
                 subprocess.call(["rm", f"{self._file_name}"])
             except:
-                    dpg.set_value(user_data, "Error downloading; invalid output file name.")
+                dpg.set_value(user_data, "Error downloading; invalid output file name.")
         except:
             dpg.set_value(user_data, "Invalid start/end time.")
 
-    def download(self,user_data,start, end, output_file_name, file_type):
+    def download(self, user_data, start, end, output_file_name, file_type):
         # Download raw youtube vid (audio stream) in mp4 format
         self.download_temp(user_data)
 
         # Convert downloaded youtube vid to mp3,aac...; subclip if parameters are specified
         self.slice(user_data, file_type, start, end, output_file_name)
+
 
 class Callback:
     """
@@ -213,25 +228,35 @@ class Callback:
     def dl_btn_cb(self, sender, app_data, user_data):
         # print(f"{self._start} {self._end} {self._output_file_name}")
         if self.dl_object is not None:
-            self.dl_object.download(user_data, self._start, self._end, self._output_file_name, self._file_type)
+            self.dl_object.download(
+                user_data,
+                self._start,
+                self._end,
+                self._output_file_name,
+                self._file_type,
+            )
 
 
 class Theme:
+    """
+    Class to define themes to bind to gui elements
+    """
+
     def __init__(self):
         self.colors = self.parse_colors()
 
-            
+    # Converts the hex color string from config file, to rgb tuple
     def hex_to_rgb(self, hex):
         try:
-            h = str(hex).lstrip('#')
-            return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+            h = str(hex).lstrip("#")
+            return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
         except:
             print("Invalid color(s) in config file.")
 
+    # Declare a new dictionary where the value is the converted rgb tuple
     def parse_colors(self) -> dict[str, tuple[int, int, int]]:
         c = dict()
-        print(Config().colors.items())
-        for k,v in Config().colors.items():
+        for k, v in Config().colors.items():
             c[k] = self.hex_to_rgb(v)
 
         return c
@@ -240,10 +265,22 @@ class Theme:
     def global_theme(self):
         with dpg.theme() as _global_theme:
             with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5, category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_WindowBg, self.colors["window_bg"], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_ChildBg, self.colors["window_bg"], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 20, 20, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(
+                    dpg.mvStyleVar_FrameRounding, 5, category=dpg.mvThemeCat_Core
+                )
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_WindowBg,
+                    self.colors["window_bg"],
+                    category=dpg.mvThemeCat_Core,
+                )
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_ChildBg,
+                    self.colors["window_bg"],
+                    category=dpg.mvThemeCat_Core,
+                )
+                dpg.add_theme_style(
+                    dpg.mvStyleVar_WindowPadding, 20, 20, category=dpg.mvThemeCat_Core
+                )
 
         return _global_theme
 
@@ -251,7 +288,11 @@ class Theme:
     def base_text_theme(self):
         with dpg.theme() as _text_theme:
             with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["base_text"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_Text,
+                    self.colors["base_text"],
+                    category=dpg.mvThemeCat_Core,
+                )
 
         return _text_theme
 
@@ -259,15 +300,27 @@ class Theme:
     def input_field_theme(self):
         with dpg.theme() as _ip_theme:
             with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_FrameBg, self.colors["input_field_bg"], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["input_field_fg"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_FrameBg,
+                    self.colors["input_field_bg"],
+                    category=dpg.mvThemeCat_Core,
+                )
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_Text,
+                    self.colors["input_field_fg"],
+                    category=dpg.mvThemeCat_Core,
+                )
         return _ip_theme
 
     @property
     def feedback_theme(self):
         with dpg.theme() as _fb_theme:
             with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["feedback_fg"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_Text,
+                    self.colors["feedback_fg"],
+                    category=dpg.mvThemeCat_Core,
+                )
 
         return _fb_theme
 
@@ -275,7 +328,11 @@ class Theme:
     def info_text_theme(self):
         with dpg.theme() as _info_label_theme:
             with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["info_fg"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_Text,
+                    self.colors["info_fg"],
+                    category=dpg.mvThemeCat_Core,
+                )
 
         return _info_label_theme
 
@@ -283,16 +340,34 @@ class Theme:
     def button_theme(self):
         with dpg.theme() as _button_theme:
             with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Button, self.colors["button_bg"], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, self.colors["button_bg_hovered"], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, self.colors["button_bg_hovered"], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["button_fg"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_Button,
+                    self.colors["button_bg"],
+                    category=dpg.mvThemeCat_Core,
+                )
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_ButtonActive,
+                    self.colors["button_bg_hovered"],
+                    category=dpg.mvThemeCat_Core,
+                )
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_ButtonHovered,
+                    self.colors["button_bg_hovered"],
+                    category=dpg.mvThemeCat_Core,
+                )
+                dpg.add_theme_color(
+                    dpg.mvThemeCol_Text,
+                    self.colors["button_fg"],
+                    category=dpg.mvThemeCat_Core,
+                )
         return _button_theme
+
 
 class App:
     """
     Class used to handle the main GUI.
     """
+
     def __init__(self):
         self._info_string = ""
         self._cb = Callback()
@@ -334,8 +409,8 @@ class App:
 
         # FONT REGISTRY
         with dpg.font_registry():
-            default_font = dpg.add_font("assets/vm_nf_mono_a.ttf", 19*2)
-            sub_text = dpg.add_font("assets/vm_nf_mono_a.ttf", 17*2)
+            default_font = dpg.add_font("assets/vm_nf_mono_a.ttf", 19 * 2)
+            sub_text = dpg.add_font("assets/vm_nf_mono_a.ttf", 17 * 2)
             dpg.set_global_font_scale(0.5)
 
         with dpg.window(
@@ -353,7 +428,9 @@ class App:
                     # Text input group to enter the video url
                     url_text = dpg.add_text("URL:")
                     with dpg.group():
-                        text_control = dpg.add_text(tag="output_txt", default_value="", indent=4)
+                        text_control = dpg.add_text(
+                            tag="output_txt", default_value="", indent=4
+                        )
                         dpg.add_spacer()
                         with dpg.group():
                             ip_a = dpg.add_input_text(
@@ -362,7 +439,7 @@ class App:
                                 callback=self.get_url,
                                 width=450,
                                 user_data=text_control,
-                                multiline=False
+                                multiline=False,
                             )
                             dpg.add_spacer()
 
@@ -389,7 +466,13 @@ class App:
                             width=200,
                             callback=self._cb.file_name_cb,
                         )
-                        dpg.add_combo(("aac", "mp3"), default_value="aac", callback=self._cb.file_type_cb, tag="audio_type", width=90)
+                        dpg.add_combo(
+                            ("aac", "mp3"),
+                            default_value="aac",
+                            callback=self._cb.file_type_cb,
+                            tag="audio_type",
+                            width=90,
+                        )
 
                     with dpg.group():
                         dpg.add_spacer()
@@ -398,12 +481,17 @@ class App:
                     with dpg.group():
                         feedback_text = dpg.add_text(tag="feedback", default_value="")
                         dl_btn = dpg.add_button(
-                            tag="dl_btn", label="Download", callback=self._cb.dl_btn_cb,
-                            user_data = feedback_text, width=100, height=30
+                            tag="dl_btn",
+                            label="Download",
+                            callback=self._cb.dl_btn_cb,
+                            user_data=feedback_text,
+                            width=100,
+                            height=30,
                         )
                         dpg.add_spacer()
 
-        themes = Theme() 
+        # Get themes from Theme Class
+        themes = Theme()
         dpg.bind_theme(themes.global_theme)
 
         dpg.bind_item_theme(win1, themes.global_theme)
@@ -419,14 +507,13 @@ class App:
         dpg.bind_item_font(ip_d, sub_text)
         dpg.bind_item_font(text_control, sub_text)
 
+        dpg.bind_item_theme(ip_a, themes.input_field_theme)
+        dpg.bind_item_theme(ip_b, themes.input_field_theme)
+        dpg.bind_item_theme(ip_c, themes.input_field_theme)
+        dpg.bind_item_theme(ip_d, themes.input_field_theme)
 
-        dpg.bind_item_theme(ip_a,themes.input_field_theme) 
-        dpg.bind_item_theme(ip_b,themes.input_field_theme) 
-        dpg.bind_item_theme(ip_c,themes.input_field_theme) 
-        dpg.bind_item_theme(ip_d,themes.input_field_theme) 
-
-        dpg.bind_item_theme(text_control,themes.info_text_theme) 
-        dpg.bind_item_theme(feedback_text,themes.feedback_theme) 
+        dpg.bind_item_theme(text_control, themes.info_text_theme)
+        dpg.bind_item_theme(feedback_text, themes.feedback_theme)
 
     def start_gui(self):
         dpg.create_context()
