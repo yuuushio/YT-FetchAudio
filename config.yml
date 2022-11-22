@@ -1,1 +1,11 @@
 directory: "~/Downloads/"
+colors:
+  window_bg: "#2E3440"
+  base_text: "#D8DEE9"
+  input_field_bg: "#3B4252"
+  input_field_fg: "#8FBCBB"
+  info_fg: "#D08770"
+  feedback_fg: "#A3BE8C"
+  button_bg: "#D8DEE9"
+  button_bg_hovered: "#8FBCBB"
+  button_fg: "#2E3440"

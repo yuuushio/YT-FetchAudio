@@ -6,7 +6,6 @@ import yaml
 import os
 import subprocess
 
-
 class Config:
     """
     Class to read config file.
@@ -22,21 +21,45 @@ class Config:
 
     @property
     def directory(self):
-        return self._data
+        return self._dir
 
     @directory.setter
     def directory(self, v):
-        self._data = v
+        self._dir = v
+
+    @property
+    def colors(self) -> dict[str, str]:
+        """
+        windows_bg
+        base_text
+        input_field_bg
+        input_field_fg
+        info_fg
+        feedback_fg
+        button_bg
+        button_bg_hovvered
+        button_fg
+        """
+        return self._colors
+
+    @colors.setter
+    def colors(self, v:dict[str,str]):
+        self._colors = v
 
     def _read_config_file(self):
         with open("config.yml", "r") as f:
-            yml_data = yaml.safe_load(f)
+            self._yml_data = yaml.safe_load(f)
 
+        # Set directory
         # `expanduser` used to expand paths containing tilde
-        if os.path.exists(os.path.expanduser(yml_data["directory"])):
-            self.directory = os.path.expanduser(yml_data["directory"])
+        if os.path.exists(os.path.expanduser(self._yml_data["directory"])):
+            self.directory = os.path.expanduser(self._yml_data["directory"])
         else:
             self.directory = ""
+
+        # Set colors
+        self.colors = self._yml_data["colors"]
+
 
 class Downloader:
     """
@@ -108,6 +131,7 @@ class Downloader:
                 t_start=start, t_end=end
             )
             try:
+                # Get the directory from the `config` class
                 cfg = Config()
                 self._file_directory = self.set_path(cfg.directory)
 
@@ -191,42 +215,79 @@ class Callback:
         if self.dl_object is not None:
             self.dl_object.download(user_data, self._start, self._end, self._output_file_name, self._file_type)
 
-class Colors:
+
+class Theme:
     def __init__(self):
-        pass
+        self.colors = self.parse_colors()
 
-        
-class nord(Colors):
-    def __init__(self):
-        super().__init__()
+            
+    def hex_to_rgb(self, hex):
+        try:
+            h = str(hex).lstrip('#')
+            return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+        except:
+            print("Invalid color(s) in config file.")
 
-    @property
-    def polar_night(self):
-        a = (46,52,64)
-        b = (59,66,82)
-        c = (67,76,94)
-        return [a, b, c]
+    def parse_colors(self) -> dict[str, tuple[int, int, int]]:
+        c = dict()
+        print(Config().colors.items())
+        for k,v in Config().colors.items():
+            c[k] = self.hex_to_rgb(v)
 
-    @property
-    def snow(self):
-        a = (216,222,233)
-        b = (229,233,240)
-        c = (236,239,244)
-        return [a,b,c]
+        return c
 
     @property
-    def frost(self):
-        a = (143,188,187)
-        b = (136,192,208)
-        c = (129,161,193)
-        d = (94, 129, 172)
-        return [a,b,c,d]
+    def global_theme(self):
+        with dpg.theme() as _global_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5, category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_WindowBg, self.colors["window_bg"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_ChildBg, self.colors["window_bg"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 20, 20, category=dpg.mvThemeCat_Core)
+
+        return _global_theme
 
     @property
-    def aurora(self):
-        b = (208,135,112)
-        d = (163,190,140)
-        return [b, d]
+    def base_text_theme(self):
+        with dpg.theme() as _text_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["base_text"], category=dpg.mvThemeCat_Core)
+
+        return _text_theme
+
+    @property
+    def input_field_theme(self):
+        with dpg.theme() as _ip_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_FrameBg, self.colors["input_field_bg"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["input_field_fg"], category=dpg.mvThemeCat_Core)
+        return _ip_theme
+
+    @property
+    def feedback_theme(self):
+        with dpg.theme() as _fb_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["feedback_fg"], category=dpg.mvThemeCat_Core)
+
+        return _fb_theme
+
+    @property
+    def info_text_theme(self):
+        with dpg.theme() as _info_label_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["info_fg"], category=dpg.mvThemeCat_Core)
+
+        return _info_label_theme
+
+    @property
+    def button_theme(self):
+        with dpg.theme() as _button_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, self.colors["button_bg"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, self.colors["button_bg_hovered"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, self.colors["button_bg_hovered"], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_Text, self.colors["button_fg"], category=dpg.mvThemeCat_Core)
+        return _button_theme
 
 class App:
     """
@@ -276,46 +337,6 @@ class App:
             default_font = dpg.add_font("assets/vm_nf_mono_a.ttf", 19*2)
             sub_text = dpg.add_font("assets/vm_nf_mono_a.ttf", 17*2)
             dpg.set_global_font_scale(0.5)
-
-
-        nord_scheme = nord()
-        with dpg.theme() as global_theme:
-        
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_FrameBg, nord_scheme.polar_night[1], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5, category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_WindowBg, nord_scheme.polar_night[0], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_ChildBg, nord_scheme.polar_night[0], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_FrameBgActive, nord_scheme.snow[0], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 20, 20, category=dpg.mvThemeCat_Core)
-        
-        with dpg.theme() as button_theme:
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Button, nord_scheme.snow[0], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, nord_scheme.frost[0], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, nord_scheme.frost[0], category=dpg.mvThemeCat_Core)
-                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.polar_night[0], category=dpg.mvThemeCat_Core)
-
-        with dpg.theme() as text_theme:
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.snow[2], category=dpg.mvThemeCat_Core)
-
-        with dpg.theme() as ip_theme:
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.frost[0], category=dpg.mvThemeCat_Core)
-
-        with dpg.theme() as info_label_theme:
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.aurora[0], category=dpg.mvThemeCat_Core)
-
-
-        with dpg.theme() as fb_theme_downloading:
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.aurora[1], category=dpg.mvThemeCat_Core)
-
-        with dpg.theme() as fb_theme_finished:
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, nord_scheme.aurora[1], category=dpg.mvThemeCat_Core)
 
         with dpg.window(
             pos=[0, 0],
@@ -382,29 +403,30 @@ class App:
                         )
                         dpg.add_spacer()
 
+        themes = Theme() 
+        dpg.bind_theme(themes.global_theme)
 
-        dpg.bind_theme(global_theme)
-        dpg.bind_item_theme(win1, global_theme)
-        dpg.bind_item_theme(dl_btn, button_theme)
-        dpg.bind_item_theme(url_text, text_theme)
-        dpg.bind_item_theme(start_text, text_theme)
-        dpg.bind_item_theme(end_text, text_theme)
-        dpg.bind_item_theme(op_file_text, text_theme)
+        dpg.bind_item_theme(win1, themes.global_theme)
+        dpg.bind_item_theme(dl_btn, themes.button_theme)
+        dpg.bind_item_theme(url_text, themes.base_text_theme)
+        dpg.bind_item_theme(start_text, themes.base_text_theme)
+        dpg.bind_item_theme(end_text, themes.base_text_theme)
+        dpg.bind_item_theme(op_file_text, themes.base_text_theme)
+
         dpg.bind_item_font(ip_a, sub_text)
         dpg.bind_item_font(ip_b, sub_text)
         dpg.bind_item_font(ip_c, sub_text)
         dpg.bind_item_font(ip_d, sub_text)
-
         dpg.bind_item_font(text_control, sub_text)
 
 
-        dpg.bind_item_theme(ip_a,ip_theme) 
-        dpg.bind_item_theme(ip_b,ip_theme) 
-        dpg.bind_item_theme(ip_c,ip_theme) 
-        dpg.bind_item_theme(ip_d,ip_theme) 
+        dpg.bind_item_theme(ip_a,themes.input_field_theme) 
+        dpg.bind_item_theme(ip_b,themes.input_field_theme) 
+        dpg.bind_item_theme(ip_c,themes.input_field_theme) 
+        dpg.bind_item_theme(ip_d,themes.input_field_theme) 
 
-        dpg.bind_item_theme(text_control,info_label_theme) 
-        dpg.bind_item_theme(feedback_text,fb_theme_downloading) 
+        dpg.bind_item_theme(text_control,themes.info_text_theme) 
+        dpg.bind_item_theme(feedback_text,themes.feedback_theme) 
 
     def start_gui(self):
         dpg.create_context()
