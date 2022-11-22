@@ -176,7 +176,7 @@ class Downloader:
                             dpg.set_value(user_data, "Download complete!")
 
                 # remove the youtube mp4 video we downloaded
-                subprocess.call(["rm", f"{self._file_name}"])
+                subprocess.call(["rm", f"{self._file_directory}/{self._file_name}"])
             except:
                 dpg.set_value(user_data, "Error downloading; invalid output file name.")
         except:
