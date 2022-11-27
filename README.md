@@ -4,8 +4,9 @@
 A GUI application that serves to do just one thing - download and convert a YouTube video, to audio (primarily for music); with the ability to trim the file - given start/end time - so you don't have to listen to annoying intro's/outro's.
 </p>
 
-<h1></h1
+<h1></h1>
 
+## Purpose
 Most online services nowadays have too many options which are tedious to browse through, or require subscriptions to bypass limitations on things such as the download size. Also, some videos on YouTube have unnecessary intro's/outro's which I don't want to tune into when I'm listening to music; hence this program.
 
 ## Features
